@@ -3,7 +3,7 @@ const bedrock = require('bedrock-protocol')
 const client = bedrock.createClient({
   host: 'localhost',   // server address
   port: 19132,         // server port
-  username: 'kegankidd@gmail.com',   // the username you want to use as observer, optional if online mode
+  username: '',   // the username you want to use as observer, optional if online mode
   offline: false       // optional, default false. if true, do not login with Xbox Live. You will not be asked to sign-in if set to true.
 })
 
