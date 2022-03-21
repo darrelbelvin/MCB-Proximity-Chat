@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const bedrock = require('bedrock-protocol');
+const { WebSocketServer } = require('ws');
 require('dotenv').config();
 
 const client = bedrock.createClient({
@@ -52,8 +53,8 @@ client.on('command_output', (packet) => { // Listen for replies to commands
       }
     });
     lastPositionalData = output;
-    lastPositionalData['timestamp'] = Date.now()
-    //console.log(lastPositionalData)
+    lastPositionalData['timestamp'] = Date.now();
+    wsSendData();
   }
 });
 
@@ -75,4 +76,50 @@ function sendCommand(commandStr){
 function sendDetectCommand(){
   locationCommandUUID = sendCommand('/execute @a ~ ~ ~ testforblock ~ ~ ~ structure_void');
   facingCommandUUID = sendCommand('/execute @a ~ ~ ~ testforblock ^ ^ ^' + facingLength + ' structure_void');
+}
+
+const wss = new WebSocketServer({ port: 8080 });
+
+function heartbeat() {
+  this.isAlive = true;
+  //console.log('pong')
+}
+
+wss.on('connection', function connection(ws) {
+  ws.on('message', function message(data) {
+    console.log('Client registered as : %s', data);
+    ws['username'] = data;
+    ws.send('You are successfuly registered as: ' + ws['username']);
+  });
+  ws.isAlive = true;
+  ws.on('pong', heartbeat);
+  ws.send('Websocket Connection Successful');
+});
+
+const pingInterval = setInterval(function ping() {
+  wss.clients.forEach(function each(ws) {
+    if (ws.isAlive === false) {
+      console.log('client died');
+      return ws.terminate();
+    }
+    ws.isAlive = false;
+    ws.ping();
+    //console.log('ping');
+  });
+}, 30000);
+
+wss.on('close', function close() {
+  clearInterval(pingInterval);
+});
+
+function wsSendData(){
+  wss.clients.forEach((ws) =>{
+    if('username' in ws){
+      if(ws['username'] in lastPositionalData){
+        ws.send(JSON.stringify(lastPositionalData[ws['username']]));
+      } else {
+        ws.send(ws['username'] + ' not found in positional data');
+      }
+    }
+  })
 }
