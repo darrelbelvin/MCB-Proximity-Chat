@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "bedrock-protocol": "^3.10.0",
+    "dotenv": "^16.0.0",
     "uuid": "^8.3.2"
   }
 }
